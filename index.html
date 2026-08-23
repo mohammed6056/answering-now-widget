@@ -311,6 +311,8 @@
   .an-row, .an-ring, .an-nudge svg, .an-typing i, .an-wave.playing b { animation: none !important; }
 }
 
+/* The media element is audio-only but must be a <video> for autoplay
+   (browsers block muted <audio> autoplay, but allow muted <video>). */
 .an-media {
   position: absolute;
   width: 1px;
@@ -381,25 +383,24 @@
   <body>
     <div data-an-widget></div>
     <script>
+/* AnsweringNow.AI — Live Call Widget (standalone, no dependencies)
+ *
+ * TO ADD A TAB: append an object to the CALLS array below. See README.md.
+ */
 
-const LOGO = "AnsweringNowAI-Logo.webp";
+const LOGO =
+  "AnsweringNowAI-Logo.webp";
 
-/* ------------------------------------------------------------------
-   ADD A NEW TAB = add one object here (id, label, audio, lines).
-   - `audio`: the RAW file name/path. Do NOT pre-encode it (no %20 etc.);
-     the widget encodes it for you via mediaSrc().
-   - `lines`: if you don't have real timestamps, leave `t` off (or all 0)
-     and the widget auto-spreads the lines across the audio duration.
------------------------------------------------------------------- */
 const CALLS = [
   {
     id: "query",
     label: "Query",
-    audio: "AI Agent Conversation.mp3",
+    audio:
+      "AI%20Agent%20Conversation.mp3",
     lines: [
       { t: 0.0, who: "agent", text: "Hi, thanks for calling the salon. This is Mia. How can I help today?" },
       { t: 4.9, who: "caller", text: "Hi, so I had a couple of questions. Do you, um, do hair colour?" },
-      { t: 10.7, who: "agent", text: "Yes, we do hair colour appointments \u2014 full colour, root touch-ups, highlights and colour refreshes." },
+      { t: 10.7, who: "agent", text: "Yes, we do hair colour appointments — full colour, root touch-ups, highlights and colour refreshes." },
       { t: 17.7, who: "caller", text: "Okay, okay. And can I add a trim with that?" },
       { t: 21.8, who: "agent", text: "Yes, a trim can usually be added with a colour appointment." },
       { t: 25.5, who: "caller", text: "Great, that's what I need. What are, like, your usual working hours?" },
@@ -420,28 +421,24 @@ const CALLS = [
       { t: 83.0, who: "agent", text: "You're welcome, Sarah. Have a nice day." },
     ],
   },
-  {
-    id: "appointment",
-    label: "Appointment",
-    audio: "AI Agent Conversation 2 CS.mp3",
-    lines: [
-      { who: "agent", text: "Thank you for calling Ridge Roofing. This is Jessica. How can I help you today?" },
-      { who: "caller", text: "Hey, we recently had a storm come through and I think part of my roof may be damaged. I wanted to schedule a time for somebody to come out for an inspection." },
-      { who: "agent", text: "Got it. Storm damage is definitely something the team can take a closer look at. We have openings this afternoon on August 11th at 2 PM, 2:30 PM and 3 PM. Which time would you like to go with?" },
-      { who: "caller", text: "Can we do the 3 o'clock today?" },
-      { who: "agent", text: "All right. We'll go with today at 3 PM. First, I have your phone number as [phone number]. Is that correct?" },
-      { who: "caller", text: "Yes, that's it." },
-      { who: "agent", text: "Great, thanks. Can I get your name for the appointment?" },
-      { who: "caller", text: "My name is John." },
-      { who: "agent", text: "Thanks, John. Do you have an email you'd like us to use for the confirmation?" },
-      { who: "caller", text: "Yes, my email is [email] at gmail.com." },
-      { who: "agent", text: "Got it. Thank you. And what's the full address for the inspection, including city, state and ZIP?" },
-      { who: "caller", text: "My address is [address]." },
-      { who: "agent", text: "All right, I've got that down for today, Tuesday, August 11th at 3 PM for an inspection. I'll get that tentatively scheduled, and the team will confirm with you before it's fully locked in." },
-    ],
-  },
-
+  { id: "customersupport", label: "Customer Support", audio: "AI%20Agent%20Conversation%2%CS.mp3", 
+   lines: [
+     { t: 0.0, who: "agent", text: "Thank you for calling Ridge Roofing. This is Jessica. How can I help you today?" },
+{ t: 5.0, who: "caller", text: "Hey. We recently had a storm come through and I think part of my roof may be damaged. I wanted to schedule a time for somebody to come out for an inspection." },
+{ t: 15.0, who: "agent", text: "Got it. Storm damage is definitely something the team can take a closer look at. We have openings this afternoon on August 11th at 2pm, 2.30pm and 3pm. Which time would you like to go with?" },
+{ t: 28.0, who: "caller", text: "Can we do the 3 o'clock today?" },
+{ t: 30.0, who: "agent", text: "All right, we'll go with today at 3pm. First, I have your phone number as. Is that correct?" },
+{ t: 39.0, who: "caller", text: "Yes, that's it." },
+{ t: 41.0, who: "agent", text: "Great, thanks. Can I get your name for the appointment?" },
+{ t: 44.0, who: "caller", text: "My name is John." },
+{ t: 46.0, who: "agent", text: "Thanks, John. Do you have an email you'd like us to use for the confirmation?" },
+{ t: 52.0, who: "caller", text: "Yes, my email. Ismail.com." },
+{ t: 59.0, who: "agent", text: "Got it. Thank you. And what's the full address for the inspection? Including city, state and zip?" },
+{ t: 67.0, who: "caller", text: "My address is." },
+{ t: 72.0, who: "agent", text: "All right, I've got that down for today. Tuesday, August 11th, at 3pm for an inspection. Foreign. I'll get that tentatively scheduled and the team will confirm with you before it's fully locked in." },
+   ] },
   { id: "callback", label: "Callback", audio: "", lines: [] },
+  { id: "realestate", label: "Real Estate", audio: "", lines: [] },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -468,31 +465,6 @@ const fmt = (s) => {
   if (!isFinite(s)) s = 0;
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
-/* Encodes a raw file name/path safely (spaces, &, etc.) without
-   double-encoding an already-encoded path. */
-const mediaSrc = (p) => {
-  if (!p) return "";
-  if (/^https?:/i.test(p)) return p;
-  return p.split("/").map((seg) => encodeURIComponent(decodeURIComponent(seg))).join("/");
-};
-
-/* Lines without real timestamps get spread across the clip, weighted by
-   how long each line takes to say, so the transcript reveals gradually
-   instead of appearing all at once. */
-function ensureTimings(call, duration) {
-  if (!duration || !isFinite(duration) || !call.lines.length) return;
-  const hasReal = call.lines.some((l, i) => i > 0 && typeof l.t === "number" && l.t > 0);
-  if (hasReal || call._timed === duration) return;
-  const weights = call.lines.map((l) => Math.max(8, l.text.length));
-  const total = weights.reduce((a, b) => a + b, 0);
-  let acc = 0;
-  call.lines.forEach((l, i) => {
-    l.t = (acc / total) * duration;
-    acc += weights[i];
-  });
-  call._timed = duration;
-}
-
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function mountCallWidget(root) {
@@ -506,7 +478,7 @@ function mountCallWidget(root) {
   root.innerHTML = `
     <div class="an-card">
       <div class="an-head">
-        <img class="an-logo" src="${mediaSrc(LOGO)}" alt="AnsweringNow.AI — Every Conversation. Answered." />
+        <img class="an-logo" src="${LOGO}" alt="AnsweringNow.AI — Every Conversation. Answered." />
         <div class="an-head-right">
           <div class="an-nudge"><span>Hear it live</span>${ICON.curvedArrow}</div>
           <button class="an-unmute" data-muted="true" type="button">
@@ -554,7 +526,6 @@ function mountCallWidget(root) {
 
   function renderChat(force) {
     const call = CALLS[current];
-    ensureTimings(call, audio.duration);
     const t = audio.currentTime || 0;
     let n = -1;
     while (n + 1 < call.lines.length && t >= call.lines[n + 1].t) n++;
@@ -611,7 +582,7 @@ function mountCallWidget(root) {
       return;
     }
     audio.muted = muted; /* must be muted BEFORE load for autoplay to be allowed */
-    audio.setAttribute("src", mediaSrc(CALLS[i].audio));
+    audio.setAttribute("src", CALLS[i].audio);
     audio.load();
     renderChat(true);
     tryAutoplay();
@@ -676,10 +647,6 @@ function mountCallWidget(root) {
     tick();
   });
 
-  audio.addEventListener("loadedmetadata", () => {
-    ensureTimings(CALLS[current], audio.duration);
-    renderChat(true);
-  });
   audio.addEventListener("timeupdate", tick);
   audio.addEventListener("play", () => {
     wave.classList.add("playing");
